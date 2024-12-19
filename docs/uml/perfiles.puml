@@ -1,0 +1,25 @@
+@startuml Perfiles
+
+package "Perfiles" {
+    class perfil_medico {
+        + SESSIONS_PER_USER 3
+        + IDLE_TIME UNLIMITED
+        + CONNECT_TIME UNLIMITED
+    }
+    class perfil_enfermera_tecnico {
+        + SESSIONS_PER_USER 2
+        + IDLE_TIME 30
+        + CONNECT_TIME 480
+    }
+    class perfil_auxiliar_conductor {
+        + SESSIONS_PER_USER 1
+        + IDLE_TIME 30
+        + CONNECT_TIME 240
+    }
+    class perfil_administrativo {
+        + SESSIONS_PER_USER 3
+        + IDLE_TIME UNLIMITED
+        + CONNECT_TIME UNLIMITED
+    }
+}
+@enduml

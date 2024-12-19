@@ -1,0 +1,29 @@
+@startuml Roles
+
+package "Roles" {
+    class ROL_MEDICO {
+        + SELECT, INSERT, UPDATE PACIENTES
+        + SELECT, INSERT, UPDATE HISTORIA_CLINICA
+        + SELECT, INSERT, UPDATE PROCEDIMIENTOS
+    }
+    class ROL_ENFERMERA {
+        + SELECT PACIENTES
+        + SELECT HISTORIA_CLINICA
+    }
+    class ROL_TECNICO {
+        + SELECT, INSERT, UPDATE PROCEDIMIENTOS
+        + SELECT, INSERT EXAMENES
+    }
+    class ROL_AUXILIAR {
+        + SELECT PACIENTES
+        + SELECT, INSERT TRANSPORTES
+    }
+    class ROL_ADMINISTRATIVO {
+        + ALL PRIVILEGES ON ALL TABLES
+    }
+    class ROL_CONDUCTOR {
+        + SELECT, INSERT TRANSPORTES
+    }
+}
+
+@enduml

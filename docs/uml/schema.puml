@@ -1,0 +1,68 @@
+@startuml Schema
+skinparam packageStyle rect
+
+package "Tablas" {
+    class PACIENTES {
+        + paciente_id : NUMBER
+        + nombre : VARCHAR2(100)
+        + apellido : VARCHAR2(100)
+        + fecha_nacimiento : DATE
+        + direccion : VARCHAR2(255)
+        + telefono : VARCHAR2(20)
+        + correo : VARCHAR2(100)
+    }
+
+    class HISTORIA_CLINICA {
+        + historia_id : NUMBER
+        + paciente_id : NUMBER
+        + fecha_ingreso : DATE
+        + diagnostico : CLOB
+        + tratamiento : CLOB
+    }
+
+    class PROCEDIMIENTOS {
+        + procedimiento_id : NUMBER
+        + paciente_id : NUMBER
+        + descripcion : CLOB
+        + fecha : DATE
+        + costo : NUMBER(10, 2)
+    }
+
+    class EXAMENES {
+        + examen_id : NUMBER
+        + paciente_id : NUMBER
+        + tipo_examen : VARCHAR2(100)
+        + resultado : CLOB
+        + fecha : DATE
+    }
+
+    class INSUMOS {
+        + insumo_id : NUMBER
+        + nombre : VARCHAR2(100)
+        + cantidad : NUMBER
+        + costo : NUMBER(10, 2)
+    }
+
+    class TRANSPORTES {
+        + transporte_id : NUMBER
+        + paciente_id : NUMBER
+        + tipo_transporte : VARCHAR2(50)
+        + fecha : DATE
+        + costo : NUMBER(10, 2)
+    }
+
+    class FINANZAS {
+        + financia_id : NUMBER
+        + paciente_id : NUMBER
+        + monto : NUMBER(10, 2)
+        + tipo_pago : VARCHAR2(50)
+        + fecha_pago : DATE
+    }
+}
+
+PACIENTES --> HISTORIA_CLINICA : "Foreign Key"
+PACIENTES --> PROCEDIMIENTOS : "Foreign Key"
+PACIENTES --> EXAMENES : "Foreign Key"
+PACIENTES --> TRANSPORTES : "Foreign Key"
+PACIENTES --> FINANZAS : "Foreign Key"
+@enduml
