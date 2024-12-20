@@ -1,4 +1,6 @@
 # Evaluación 4 Bases de datos Relacionales
+https://github.com/CarlosM01/rdb_eval4
+
 ### Integrantes:
 * Diego Reyes
 * Carlos Mac-Iver
@@ -6,8 +8,46 @@
 ### Sección:
 * AP-172-N2
 
-##
-Este documento describe el proceso de configuración, creación de tablas, definición de roles y perfiles, y pruebas de acceso a una base de datos Oracle, creada con el contenedor podman y la imagen oficial de Oracle Database. El objetivo es gestionar de manera eficiente la información relacionada con pacientes, su historia clínica, procedimientos médicos, exámenes, insumos, transporte y finanzas en un sistema hospitalario. Se detallan los pasos para la creación de tablas, asignación de privilegios y roles a usuarios específicos, así como las pruebas de inserción, actualización y eliminación de datos desde diferentes perspectivas de usuario. Esta implementación es una base sólida para la gestión de datos en un entorno de salud, asegurando que los roles y perfiles de usuarios estén correctamente configurados según las responsabilidades de cada uno.
+## Índice
+
+1. **Introducción**  
+   - Objetivo del documento  
+
+2. **Diagramas**  
+   - Tablas  
+   - Perfiles  
+   - Roles  
+
+3. **Configuración inicial**  
+   3.1. Creación del contenedor e instalación de Oracle DB  
+   3.2. Verificación del estado de la base de datos  
+   3.3. Conexión a la base de datos  
+
+4. **Creación de tablas**  
+   - Detalle de las tablas con sus atributos y relaciones  
+
+5. **Definición de roles y perfiles**  
+   5.1. Creación de usuarios  
+   5.2. Definición de roles  
+   5.3. Creación de perfiles  
+   5.4. Asignación de roles y perfiles  
+   5.5. Guardar cambios  
+
+6. **Testing**  
+   - Verificación de conexión a la base de datos  
+   - Pruebas de acceso y manipulación de datos con el usuario **C##medico00**  
+     - Consulta de tablas  
+     - Inserción de datos  
+     - Actualización de
+     - Verificación de privilegios  
+
+7. **Referencias**  
+   - Enlaces a recursos y documentación utilizados  
+
+
+---
+## Introducción
+Este documento describe el proceso de configuración, creación de tablas, definición de roles y perfiles, y pruebas de acceso a una base de datos Oracle, creada con el contenedor Podman y la imagen oficial de Oracle Database. El objetivo es gestionar de manera eficiente la información relacionada con pacientes, su historia clínica, procedimientos médicos, exámenes, insumos, transporte y finanzas en un sistema hospitalario. Se detallan los pasos para la creación de tablas, asignación de privilegios y roles a usuarios específicos, así como las pruebas de inserción, actualización y eliminación de datos desde diferentes perspectivas de usuario. Esta implementación es una base sólida para la gestión de datos en un entorno de salud, asegurando que los roles y perfiles de usuarios estén correctamente configurados según las responsabilidades de cada uno.
 
 ## Diagramas
 ### Tablas
@@ -17,25 +57,40 @@ Este documento describe el proceso de configuración, creación de tablas, defin
 ### Roles 
 ![roles](./uml/roles.png)
 
+Diagramas creados con PlantUML. Código fuente en el repositorio del proyecto.
 
 ## Configuración inicial
-1.Crear contenedor e instalar imagen de Oracle DB
+1. Crear contenedor e instalar imagen de Oracle DB
 ```bash
-podman run -d --name mydb2 \
--p 1522:1521 \
--e ORACLE_PWD=NewPass123 \
-container-registry.oracle.com/database/free:latest
+podman run -d --name mydb \                         #Nombre de la base de datos
+-p 1522:1521 \                                      #Puerto
+-e ORACLE_PWD=SystemPass123 \                       #Contraseña de usuario SYSTEM
+-v ./data:/mi_base_de_datos \                       #Opcional: Crear un volumen  
+container-registry.oracle.com/database/free:latest  #Imagen de Oracle
 ```
-La contraseña registrada aquí será la que utilizara el usuario SYSTEM
+* Como protocolo de seguridad se sugiere ingresar las contraseñas como variables de entorno o desactivar temporalmente el historial de la terminal.
+* Crear un volumen es opcional pero recomendado, sirve para asegurar la persistencia de los datos al cerrar el contenedor. Si se omite este paso, la información almacenada sería volátil. 
+* Revisar: [Oracle Container Registry](https://container-registry.oracle.com/ords/f?p=113:4:105468287933418:::4:P4_REPOSITORY,AI_REPOSITORY,AI_REPOSITORY_NAME,P4_REPOSITORY_NAME,P4_EULA_ID,P4_BUSINESS_AREA_ID:1863,1863,Oracle%20Database%20Free,Oracle%20Database%20Free,1,0&cs=3AwzWwTBO9ge-PN-FJMP6CmQIpWJeaPM4t9K_xjdv0tus0fX1UchjuxAxgeVBrAvzu6mTDU_YC5ddFcwUKIiagg)
 
 ---
-2.Conectarse a la base de datos con SQL Developer
+2. Comprobamos que la base de datos esté funcionando
+```bash
+podman ps
+```
+![DB Working](./images/db_working.png)
+
+---
+3. Conectarse a la base de datos con SQL Developer
 ![SQL Developer Connect](./images/SQLdeveloper_connect.png)
+
+Para este experimento ejecutamos SLQ Developer desde VS Code.
+
+* Revisar: [SQL Developer Dowloads](https://www.oracle.com/cl/database/sqldeveloper/technologies/download/)
 
 ---
 ## Creación de tablas
 
-Usuario: SYSTEM
+### Usuario: SYSTEM
 
  ```SQL
 CREATE TABLE PACIENTES (
@@ -103,7 +158,7 @@ CREATE TABLE FINANZAS (
 
 ## Definición de Roles y Perfiles
 
-CREACION DE USUARIOS
+1. Creación de usuarios.
 ```SQL
 -- Crear usuarios con contraseñas predeterminadas
 CREATE USER C##medico00 IDENTIFIED BY O7Qw5XUJiduTk;
@@ -116,9 +171,12 @@ CREATE USER C##conductor00 IDENTIFIED BY nNeaPic5cG3ge6;
 -- Asignar privilegios básicos para conexión
 GRANT CONNECT TO C##medico00, C##enfermera00, C##tecnico00, C##auxiliar00, C##administrativo00, C##conductor00;
 ```
+En ningun caso las contraseñas deberían estar expuestas si se tratara de un entorno de producción.
+
+Al tratarse de un experimento, se muestran las contraseñas en texto plano dentro del script, sólo para mantener la claridad de la explicación. Ingresar los datos sensibles mediante un cliente como SQL Plus evitaría que las contraseñas se expongan accidentalmente a terceros.
 
 ---
-DEFINICION DE ROLES
+2. Definición de roles.
 ```SQL
 -- Crear roles para los distintos tipos de personal
 CREATE ROLE C##ROL_MEDICO;
@@ -160,7 +218,7 @@ GRANT SELECT, INSERT ON TRANSPORTES TO C##ROL_CONDUCTOR;
 ```
 
 ---
-CREACION DE PERFILES
+3. Creación de perfiles.
 ```SQL
 -- Crear perfiles para limitar recursos
 CREATE PROFILE C##perfil_medico LIMIT
@@ -185,7 +243,7 @@ CREATE PROFILE C##perfil_administrativo LIMIT
 ```
 
 ---
-ASIGNACION DE ROLES Y PERFILES
+4. Asignación de roles y perfiles.
 ```SQL
 -- Asignar perfiles a los usuarios
 ALTER USER C##medico00 PROFILE C##perfil_medico;
@@ -205,7 +263,7 @@ GRANT C##ROL_CONDUCTOR TO C##conductor00;
 ```
 
 ---
-GUARDAR CAMBIOS
+5. Guardar cambios.
 ```SQL
 COMMIT;
 ```
@@ -213,15 +271,20 @@ COMMIT;
 ---
 ## Testing
 
-### Usuario: medico00
-La conexión se realiza con los mismo parámetros, pero hay que cambiar los datos de usuario y contraseña por los definidos en el script anterior.
+### Usuario: C##medico00
+La conexión se realiza con los mismos parámetros que en el paso 3 de la configuración inicial, pero hay que cambiar los datos de usuario y contraseña por los definidos en el script anterior para el usuario específico que se desea testar. En este caso:
 
+```SQL
+CREATE USER C##medico00 IDENTIFIED BY O7Qw5XUJiduTk;
+```
+
+---
 1. Verificar conexión a la base de datos (consulta de todas las tablas)
 ```SQL
 SELECT * FROM ALL_TABLES WHERE OWNER = 'SYSTEM';
 ```
 ![Test medic user connection](./images/medico00_test/test_medic_connection.png)
-Si la conexión es exitosa, deberia verse una lista de tablas como esa
+Si la conexión es exitosa, debería verse una lista de tablas como esa.
 
 ---
 2. Verificar acceso a la tabla PACIENTES (debe poder consultar)
@@ -300,12 +363,15 @@ SELECT * FROM SYSTEM.PROCEDIMIENTOS WHERE paciente_id = 1001;
 DELETE FROM SYSTEM.PACIENTES WHERE paciente_id = 1001;
 ```
 ![Paciente delete test](./images/medico00_test/delete_patient_test.png)
-No nos permite borrar el paciente porque el usuario no tiene los permisos necesarios.
+Tal como se espera, no nos permite borrar el paciente porque el usuario no tiene los permisos necesarios.
 
 
 ## Referencias
 
-1. Oracle. (n.d.). *Oracle Database Free*. Oracle Container Registry. Recuperado de https://container-registry.oracle.com/ords/f?p=113:4:120091765265806:::4:P4_REPOSITORY,AI_REPOSITORY,AI_REPOSITORY_NAME,P4_REPOSITORY_NAME,P4_EULA_ID,P4_BUSINESS_AREA_ID:1863,1863,Oracle%20Database%20Free,Oracle%20Database%20Free,1,0&cs=3cTYLgDuOkSVmJKFhUNzXWm6YZzstok0VZzDl8Wl8_5ggD9Qs--VTfPENF8FAuOlBztCrwTmGpCBzOWS6C_dkAg
+1. Oracle. (n.d.). *Oracle Database Documentation*. Recuperado de https://docs.oracle.com/en/database/oracle/oracle-database/23/index.html
 
-2. Oracle. (n.d.). *Oracle SQL Developer Documentation*. Recuperado de https://docs.oracle.com/en/database/oracle/sql-developer/index.html
+2. Oracle. (n.d.). *Oracle Container Registry*. Recuperado de https://container-registry.oracle.com/ords/f?p=113:4:105468287933418:::4:P4_REPOSITORY,AI_REPOSITORY,AI_REPOSITORY_NAME,P4_REPOSITORY_NAME,P4_EULA_ID,P4_BUSINESS_AREA_ID:1863,1863,Oracle%20Database%20Free,Oracle%20Database%20Free,1,0&cs=3AwzWwTBO9ge-PN-FJMP6CmQIpWJeaPM4t9K_xjdv0tus0fX1UchjuxAxgeVBrAvzu6mTDU_YC5ddFcwUKIiagg
 
+4. Oracle. (n.d.). *Oracle SQL Developer Documentation*. Recuperado de https://docs.oracle.com/en/database/oracle/sql-developer/index.html
+
+4. Oracle. (n.d.). *SQL Developer Dowloads*. Recuperado de https://www.oracle.com/cl/database/sqldeveloper/technologies/download/
