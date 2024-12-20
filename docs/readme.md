@@ -38,8 +38,9 @@ https://github.com/CarlosM01/rdb_eval4
    - Pruebas de acceso y manipulación de datos con el usuario **C##medico00**  
      - Consulta de tablas  
      - Inserción de datos  
-     - Actualización de
-     - Verificación de privilegios  
+     - Actualización de datos
+     - Verificación de privilegios
+     - Verificación de límite de sesiones simultáneas  
 
 7. **Referencias**  
    - Enlaces a recursos y documentación utilizados  
@@ -62,15 +63,22 @@ Diagramas creados con PlantUML. Código fuente en el repositorio del proyecto.
 ## Configuración inicial
 1. Crear contenedor e instalar imagen de Oracle DB
 ```bash
-podman run -d --name mydb \                         #Nombre de la base de datos
--p 1522:1521 \                                      #Puerto
--e ORACLE_PWD=SystemPass123 \                       #Contraseña de usuario SYSTEM
--v ./data:/mi_base_de_datos \                       #Opcional: Crear un volumen  
-container-registry.oracle.com/database/free:latest  #Imagen de Oracle
+podman run -d --name mydb \
+-p 1521:1521 \
+-e ORACLE_PWD=SystemPass123 \
+-v ./data:/database \
+container-registry.oracle.com/database/free:latest
 ```
+### Flags
+* -p: Puertos
+* -e: Contraseña para el usuario System
+* -v: Ruta del volumen donde se almacenarán los datos
+* Ruta de la imagen, si no se especifica la versión se usará la última por defecto
+
+### Consideraciones
 * Como protocolo de seguridad se sugiere ingresar las contraseñas como variables de entorno o desactivar temporalmente el historial de la terminal.
 * Crear un volumen es opcional pero recomendado, sirve para asegurar la persistencia de los datos al cerrar el contenedor. Si se omite este paso, la información almacenada sería volátil. 
-* Revisar: [Oracle Container Registry](https://container-registry.oracle.com/ords/f?p=113:4:105468287933418:::4:P4_REPOSITORY,AI_REPOSITORY,AI_REPOSITORY_NAME,P4_REPOSITORY_NAME,P4_EULA_ID,P4_BUSINESS_AREA_ID:1863,1863,Oracle%20Database%20Free,Oracle%20Database%20Free,1,0&cs=3AwzWwTBO9ge-PN-FJMP6CmQIpWJeaPM4t9K_xjdv0tus0fX1UchjuxAxgeVBrAvzu6mTDU_YC5ddFcwUKIiagg)
+* Para más indormación revisar: [Oracle Container Registry](https://container-registry.oracle.com/ords/f?p=113:4:105468287933418:::4:P4_REPOSITORY,AI_REPOSITORY,AI_REPOSITORY_NAME,P4_REPOSITORY_NAME,P4_EULA_ID,P4_BUSINESS_AREA_ID:1863,1863,Oracle%20Database%20Free,Oracle%20Database%20Free,1,0&cs=3AwzWwTBO9ge-PN-FJMP6CmQIpWJeaPM4t9K_xjdv0tus0fX1UchjuxAxgeVBrAvzu6mTDU_YC5ddFcwUKIiagg)
 
 ---
 2. Comprobamos que la base de datos esté funcionando
@@ -158,7 +166,7 @@ CREATE TABLE FINANZAS (
 
 ## Definición de Roles y Perfiles
 
-1. Creación de usuarios.
+1. Creación de usuarios
 ```SQL
 -- Crear usuarios con contraseñas predeterminadas
 CREATE USER C##medico00 IDENTIFIED BY O7Qw5XUJiduTk;
@@ -176,7 +184,7 @@ En ningun caso las contraseñas deberían estar expuestas si se tratara de un en
 Al tratarse de un experimento, se muestran las contraseñas en texto plano dentro del script, sólo para mantener la claridad de la explicación. Ingresar los datos sensibles mediante un cliente como SQL Plus evitaría que las contraseñas se expongan accidentalmente a terceros.
 
 ---
-2. Definición de roles.
+2. Definición de roles
 ```SQL
 -- Crear roles para los distintos tipos de personal
 CREATE ROLE C##ROL_MEDICO;
@@ -218,7 +226,7 @@ GRANT SELECT, INSERT ON TRANSPORTES TO C##ROL_CONDUCTOR;
 ```
 
 ---
-3. Creación de perfiles.
+3. Creación de perfiles
 ```SQL
 -- Crear perfiles para limitar recursos
 CREATE PROFILE C##perfil_medico LIMIT
@@ -243,7 +251,7 @@ CREATE PROFILE C##perfil_administrativo LIMIT
 ```
 
 ---
-4. Asignación de roles y perfiles.
+4. Asignación de roles y perfiles
 ```SQL
 -- Asignar perfiles a los usuarios
 ALTER USER C##medico00 PROFILE C##perfil_medico;
@@ -263,13 +271,19 @@ GRANT C##ROL_CONDUCTOR TO C##conductor00;
 ```
 
 ---
-5. Guardar cambios.
+5. Guardar cambios
 ```SQL
 COMMIT;
 ```
+---
+![Users](./images/users.png)
+
+Podemos verificar que los usuarios fueron creados correctamente en la base de datos.
 
 ---
 ## Testing
+
+* **Nota:** Queda pendiente el testeo de los demás perfiles, no los agregamos en este documento para evitar extenderlo demasiado con información redundante. Testar los demás perfiles debería seguir pasos similares.
 
 ### Usuario: C##medico00
 La conexión se realiza con los mismos parámetros que en el paso 3 de la configuración inicial, pero hay que cambiar los datos de usuario y contraseña por los definidos en el script anterior para el usuario específico que se desea testar. En este caso:
@@ -365,6 +379,13 @@ DELETE FROM SYSTEM.PACIENTES WHERE paciente_id = 1001;
 ![Paciente delete test](./images/medico00_test/delete_patient_test.png)
 Tal como se espera, no nos permite borrar el paciente porque el usuario no tiene los permisos necesarios.
 
+---
+12. Probar el límite de sesiones simultáneas 
+
+![Connections test](./images/connections_test.png)
+![Error sessions limit](./images/error_sessions_limit.png)
+
+Al intentar realizar una cuarta conexión debería surgir un error como el de la imagen, ya que hemos configurado un máximo de tres sesiones simultáneas para este usuario.
 
 ## Referencias
 
