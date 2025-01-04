@@ -1,4 +1,4 @@
-# Evaluación 4 Bases de datos Relacionales
+# Creación y asignación de roles y perfiles en Oracle DB
 https://github.com/CarlosM01/rdb_eval4
 
 ### Integrantes:
